@@ -53,6 +53,4 @@ All generated WAV files will be saved in the `cosyvoice_outputs_prompt_only/` di
 - This demo does **not** rely on `add_zero_shot_spk()` or `spk` arguments that may not exist in all versions.
 - CosyVoice2 must be locally installed and accessible via `cosyvoice.cli.cosyvoice.CosyVoice2`.
 
-## 🧑‍💻 Author
 
-Adapted for research usage by [Your Name]
