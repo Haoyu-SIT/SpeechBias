@@ -1,0 +1,24 @@
+import sys
+sys.path.append('third_party/Matcha-TTS')
+from cosyvoice.cli.cosyvoice import CosyVoice, CosyVoice2
+from cosyvoice.utils.file_utils import load_wav
+import torchaudio
+
+cosyvoice = CosyVoice2('pretrained_models/CosyVoice2-0.5B', load_jit=False, load_trt=False, fp16=False, use_flow_cache=False)
+
+
+# bistream usage, you can use generator as input, this is useful when using text llm model as input
+# NOTE you should still have some basic sentence split logic because llm can not handle arbitrary sentence length
+cosyvoice = CosyVoice('pretrained_models/CosyVoice-300M-Instruct')
+# instruct usage, support <laughter></laughter><strong></strong>[laughter][breath]
+for i, j in enumerate(cosyvoice.inference_instruct('在面对挑战时，他展现了非凡的<strong>勇气</strong>与<strong>智慧</strong>。', '中文男', 'Theo \'Crimson\', is a fiery, passionate rebel leader. Fights with fervor for justice, but struggles with impulsiveness.', stream=False)):
+    torchaudio.save('instruct_{}.wav'.format(i), j['tts_speech'], cosyvoice.sample_rate)
+
+from cosyvoice.cli.cosyvoice import CosyVoice
+
+cosyvoice = CosyVoice('pretrained_models/CosyVoice-300M-Instruct')
+spk_ids = cosyvoice.list_available_spks()
+
+print("✅ speaker ID:")
+for spk in spk_ids:
+    print("-", spk)
