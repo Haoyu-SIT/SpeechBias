@@ -12,3 +12,6 @@ We have **completed the initial implementation** of both **speech synthesis** an
 - `AccentDectection/`: Codebase for detecting **accent bias** based on classification outputs.
 
 More detailed documentation and usage examples will be added in future updates.
+
+CosyVoice2 need to download a third party tts to rush with link below
+https://github.com/shivammehta25/Matcha-TTS/tree/dd9105b34bf2be2230f4aa1e4769fb586a3c824e
