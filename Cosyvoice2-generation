@@ -1,0 +1,79 @@
+import sys
+import os
+import torchaudio
+import torch
+import random
+from cosyvoice.utils.file_utils import load_wav
+from cosyvoice.cli.cosyvoice import CosyVoice2
+
+# Add project paths to system path
+sys.path.append('/home/asian/Desktop/projects/CosyVoice-main')
+sys.path.append('/home/asian/Desktop/projects/CosyVoice-main/third_party/Matcha-TTS')
+
+# Initialize the CosyVoice2 model
+cosyvoice = CosyVoice2("iic/CosyVoice2-0.5B", load_jit=False, load_trt=False, fp16=False)
+
+# Load the reference prompt speech (used for voice style transfer)
+prompt_speech_16k = load_wav('./asset/zero_shot_prompt.wav', 16000)
+
+# Target content sentences for TTS generation
+content_prompts = [
+    "The gift from a friend who lives far away brought me unexpected joy and warm blessings.",
+    "I was deeply touched by the surprise birthday present and couldn't help but smile.",
+    "Receiving heartfelt wishes from afar made my day so special and bright."
+]
+
+# Style attributes (emotion/occupation + gender + accent)
+attributes = [
+    {"type": "emotion", "value": "happy", "gender": "female", "accent": "american"},
+    {"type": "occupation", "value": "teacher", "gender": "male", "accent": "singaporean"}
+]
+
+# Output directory
+output_dir = "cosyvoice_outputs_prompt_only"
+os.makedirs(output_dir, exist_ok=True)
+
+# Iterate through each attribute setting and generate TTS audio
+for attr in attributes:
+    # Construct descriptive style prompt
+    style_prompt = f"A {attr['gender']} voice expressing {attr['value']} ({attr['type']}) with a {attr['accent']} accent"
+    label = f"{attr['value']}_{attr['gender']}"
+    save_path = os.path.join(output_dir, label)
+    os.makedirs(save_path, exist_ok=True)
+
+    # ─── Instruct2 Mode ───
+    # Use language prompt to control voice style (combined with reference audio)
+    for i, j in enumerate(cosyvoice.inference_instruct2(
+        random.choice(content_prompts),
+        style_prompt,
+        prompt_speech_16k,
+        stream=False
+    )):
+        torchaudio.save(os.path.join(save_path, f"instruct_{i}.wav"), j["tts_speech"], cosyvoice.sample_rate)
+
+    # ─── Cross-lingual Mode ───
+    # Insert controllable audio events like [laughter]
+    cross_text = f"This is an example of {attr['value']} expression [laughter]"
+    for i, j in enumerate(cosyvoice.inference_cross_lingual(
+        cross_text,
+        prompt_speech_16k,
+        stream=False
+    )):
+        torchaudio.save(os.path.join(save_path, f"crosslingual_{i}.wav"), j["tts_speech"], cosyvoice.sample_rate)
+
+    # ─── Zero-shot Mode ───
+    # Input multiple sentences using a generator
+    def text_generator():
+        yield f"{attr['value'].capitalize()} is essential in communication."
+        yield f"A {attr['value']} tone helps build trust and connection."
+        yield f"It is especially helpful for a {attr['gender']} {attr['type']}."
+
+    for i, j in enumerate(cosyvoice.inference_zero_shot(
+        text_generator(),
+        style_prompt,
+        prompt_speech_16k,
+        stream=False
+    )):
+        torchaudio.save(os.path.join(save_path, f"bistream_{i}.wav"), j["tts_speech"], cosyvoice.sample_rate)
+
+print("✅ All speech generation done using prompt + audio control.")
