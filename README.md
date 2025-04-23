@@ -52,5 +52,8 @@ All generated WAV files will be saved in the `cosyvoice_outputs_prompt_only/` di
 
 - This demo does **not** rely on `add_zero_shot_spk()` or `spk` arguments that may not exist in all versions.
 - CosyVoice2 must be locally installed and accessible via `cosyvoice.cli.cosyvoice.CosyVoice2`.
+- Some function interfaces between CosyVoice and CosyVoice2 were inconsistent.
+I have modified the function definitions and uploaded the updated file to previous source code at cosyvoice/cli/cosyvoice.py.
+
 
 
